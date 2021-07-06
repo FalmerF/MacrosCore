@@ -1,4 +1,4 @@
-package net.smb.Macros.Actions;
+package net.smb.Macros.actions;
 
 import net.smb.Macros.CodeParser;
 import net.smb.Macros.util.Log;

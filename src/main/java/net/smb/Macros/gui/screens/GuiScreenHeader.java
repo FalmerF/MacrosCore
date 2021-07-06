@@ -24,6 +24,7 @@ public class GuiScreenHeader extends GuiScreen implements IGuiScreenHeader {
 	protected List<GuiElement> guiElements = new ArrayList<GuiElement>();
 	public GuiElement selected;
 	public GuiElement pressed;
+	public GuiPanel hoverPanel;
 	
 	public GuiScreenHeader(Minecraft mc) {
 		this.mc = mc;
@@ -47,6 +48,7 @@ public class GuiScreenHeader extends GuiScreen implements IGuiScreenHeader {
 	}
 	
 	public void actionPerfomed(GuiElement element, int mouseButton) {}
+	public void doubleActionPerfomed(GuiElement element, int mouseButton) {}
 	public void actionReleased(GuiElement element) {}
 	
 	public void drawScreen(int posX, int posY, float partialTicks)

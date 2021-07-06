@@ -1,9 +1,10 @@
-package net.smb.Macros.Actions;
+package net.smb.Macros.actions;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.util.ChatComponentText;
 import net.smb.Macros.CodeParser;
+import net.smb.Macros.Localisation;
 
 public class ActionLog extends ActionBase {
 

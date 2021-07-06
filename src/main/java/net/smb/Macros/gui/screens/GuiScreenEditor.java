@@ -43,8 +43,8 @@ public class GuiScreenEditor extends GuiScreenElement {
 		
 		currentScreen = (GuiScreenMenu)Minecraft.getMinecraft().currentScreen;
 		
-		filesPanel = new GuiPanel(-1, posX, posY, 154, 299);
-		scrollView = new GuiScrollView(-1, 2, 30, 150, 267);
+		filesPanel = new GuiPanel(-1, posX, posY, 154, currentScreen.height-this.posY-5);
+		scrollView = new GuiScrollView(-1, 2, 30, 150, filesPanel.height-32);
 		scrollView.elementHeight = 20;
 		updateFiles();
 		
@@ -73,7 +73,7 @@ public class GuiScreenEditor extends GuiScreenElement {
 		createFilePanel.setVisible(false);
 		guiElements.add(createFilePanel);
 		
-		editorPanel = new GuiPanel(-1, posX+159, posY, currentScreen.width-169, 299);
+		editorPanel = new GuiPanel(-1, posX+159, posY, currentScreen.width-169, currentScreen.height-this.posY-5);
 		editor = new GuiEditor(2, 2, editorPanel.width-4, editorPanel.height-4, "", Localisation.getString("field.description.code"));
 		editor.setEnabled(false);
 		editorPanel.addGuiElement(editor);
@@ -153,7 +153,7 @@ public class GuiScreenEditor extends GuiScreenElement {
 				fileNameField.visible = false;
 				deleteButton.visible = false;
 				editor.setEnabled(false);
-				scrollView.setHeight(267);
+				scrollView.setHeight(filesPanel.height-32);
 				saveButton.visible = false;
 				editor.setText("");
 			}
@@ -181,26 +181,31 @@ public class GuiScreenEditor extends GuiScreenElement {
 				}
 				editor.setEnabled(true);
 				
-				scrollView.setHeight(237);
+				scrollView.setHeight(filesPanel.height-67);
 				saveButton.visible = true;
 			}
 		}	
 	}
 	
 	public void renameFile() {
-		if(!selectedFileButton.displayString.equals(fileNameField.text)) {
-			File f = new File(MacrosSettings.macrosDir, selectedFileButton.displayString + ".txt");
-			File newF = new File(MacrosSettings.macrosDir, fileNameField.text + ".txt");
-			if(newF.exists()) {
-				for(int i = 1;;i++) {
-					newF = new File(MacrosSettings.macrosDir, fileNameField.text + "_" + i + ".txt");
-					if(!newF.exists()) break;
-				}
-			}
-			if(MacrosSettings.macrosDir.exists()) MacrosSettings.macrosDir.mkdir();
-			f.renameTo(newF);
-			selectedFileButton.displayString = newF.getName().substring(0, newF.getName().length()-4);
+		if(fileNameField.text.equals("")) {
 			fileNameField.text = selectedFileButton.displayString;
+		}
+		else {
+			if(!selectedFileButton.displayString.equals(fileNameField.text)) {
+				File f = new File(MacrosSettings.macrosDir, selectedFileButton.displayString + ".txt");
+				File newF = new File(MacrosSettings.macrosDir, fileNameField.text + ".txt");
+				if(newF.exists()) {
+					for(int i = 1;;i++) {
+						newF = new File(MacrosSettings.macrosDir, fileNameField.text + "_" + i + ".txt");
+						if(!newF.exists()) break;
+					}
+				}
+				if(MacrosSettings.macrosDir.exists()) MacrosSettings.macrosDir.mkdir();
+				f.renameTo(newF);
+				selectedFileButton.displayString = newF.getName().substring(0, newF.getName().length()-4);
+				fileNameField.text = selectedFileButton.displayString;
+			}
 		}
 	}
 	

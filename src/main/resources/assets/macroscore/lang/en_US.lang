@@ -1,0 +1,140 @@
+menu.title=Macros Core
+
+key.categories.macroscore=Macros Core
+key.macrosmenu=Open Menu
+
+menu.category.keybind=Keys
+menu.category.events=Events
+menu.category.gui=Gui
+menu.category.editor=Editor
+menu.category.settings=Settings
+
+menu.settings.language=Language
+menu.settings.codehints=Hide Code hints
+menu.settings.codehints.description=Description hints when highlighting a Action
+menu.settings.slotid=Show Slot ID
+menu.settings.slotid.description=Show Slot ID in cursor
+menu.settings.chatbutton=Hide button in chat
+menu.settings.chatbutton.description=Disables the editor GUI button on the Chat screen
+menu.settings.debug=Enable debug information
+menu.settings.debug.description=If you do not know what it is, then do not turn it on §c§l(Reduces FPS!)
+
+keybind.edit.key=Editing a macro for 
+keybind.edit.event=Editing a macro for event
+
+field.description.macros=Macros...
+field.description.file=File Name...
+field.description.name=Name...
+field.description.code=Code...
+field.description.text=Text...
+field.description.value=Value...
+field.description.image=Image...
+field.saved=Saved...
+
+menu.keybinding.save=Do you want to save your work before leaving?
+menu.keybinding.guide.title=Guide
+menu.keybinding.guide=This is the main menu for setting up your binds and macros. You can choose any convenient button, click on it and enter your bind or macro there. Example: write §6/home§r and save the changes, then close the menu and click the button in the game and you will be teleported home, if such a command is on your server. You can find a more detailed guide in our documentation...
+
+menu.event.guide.title=Guide
+menu.event.guide=EVENT Guuuuuuuuuuuide
+
+menu.editor.createfile=Create new File
+
+menu.guiselect.guide=Drag the screen from the list on the left to assign a GUI slot. You can assign multiple slots on the same screen.
+menu.guiselect.slot=Slot
+menu.guiselect.layout=Layout
+
+menu.guiedit.editing=Editing 
+
+menu.yes=Yes
+menu.no=No
+menu.create=Create
+menu.cancel=Cancel
+menu.save=Save
+
+widget.name.button=Button
+widget.name.text=Text
+widget.name.slider=Slider
+widget.name.indicator=Indicator
+widget.name.image=Image
+
+widget.text=Text
+widget.dontclose=Don't close the GUI on click
+widget.backgroundcolor=Background Color
+widget.textcolor=Text Color
+widget.color=Color
+widget.macros=Macros:
+widget.positioning=Positioning
+widget.value=Value
+widget.minvalue=Min. Value
+widget.maxvalue=Max. Value
+widget.steps=Steps
+widget.image=image
+
+pos1=Left Up
+pos2=Left Center
+pos3=Left Down
+pos4=Center Up
+pos5=Center
+pos6=Center Down
+pos7=Right Up
+pos8=Right Center
+pos9=Right Down
+
+posH=Horizontal
+posV=Vertical
+
+posIndicator1=Left to Right
+posIndicator2=Right to Left
+posIndicator3=Top Down
+posIndicator4=Down Up
+
+paragraph=§
+
+parser.error.varname=Invalid variable name
+parser.error.varexists=Variable
+parser.error.varexists2=already exists.
+parser.error.cantparse=Can't parse from
+parser.error.methodexists=Action
+parser.error.methodexists2=doesn't exist
+parser.error.syntax=Syntax error
+parser.error.expected=Expected ; in
+parser.error.file=File
+parser.error.notarray=is not an array.
+parser.error.outofbounds=Out of bounds in array
+
+action.description.log=Displays a message in the chat.\n\n§6log(§9string§7 message§6)
+action.description.send=Sends a chat message on your behalf.\n\n§6send(§9string§7 message§6)
+action.description.pow=Raises the first number to the power of the second number.\n\n§6pow(§9int§7 num1§6, §9int§7 num2§6)\n§creturn §9int
+action.description.wait=Creates a delay for the specified time.\n\n§6wait(§9int§7 milliseconds§6)
+action.description.run=Runs the specified script located in the game folder:\n§7.minecraft/MacrosCore/...\n\n§6run(§9string§7 filename§6)
+action.description.filter=Cancels the package sending.\nUsed in filtering events.\n\n§6filter()
+action.description.calcYawTo=Calculates the absolute yaw angle to the specified coordinates.\n\n§6calcYawTo(§9int§7 posX§6, §9int§7 posY§6)\n§creturn §9float
+action.description.decode=Converts an string from base64 back to an normal string.\n\n§6decode(§9string§7 text§6)\n§creturn §9string
+action.description.encode=Converts an string to base 64.\n\n§6encode(§9string§7 text§6)\n§creturn §9string
+action.description.getID=Gets the block ID at the specified coordinates.\n\n§6getID(§9int§7 posX§6, §9int§7 posY§6, §9int§7 posZ§6)\n§creturn §9string
+action.description.toLower=Converts the input string to lower case.\n\n§6toLower(§9string§7 text§6)\n§creturn §9string
+action.description.toUpper=Converts the input string to upper case.\n\n§6toUpper(§9string§7 text§6)\n§creturn §9string
+action.description.match=Executes regular expression and returns true or false.\n\n§6match(§9string§7 text§6, §9string§7 pattern§6)\n§creturn §9bool
+action.description.getMatch=Executes regular expression and returns group.\n\n§6getMatch(§9string§7 text§6, §9string§7 pattern§6)\n§creturn §9string[]
+action.description.random=Return a random number between min and max.\n\n§6random(§9int§7 min§6, §9int§7 max§6)\n§creturn §9int
+action.description.replace=Replace all occurrences on the specified pattern.\n\n§6replace(§9string§7 text§6, §9string§7 pattern§6, §9string§7 replace§6)\n§creturn §9string
+action.description.sqrt=Calculates the square root of a specified number.\n\n§6sqrt(§9float§7 number§6)\n§creturn §9float
+action.description.strip=Strips all formatting codes from the specified text.\n\n§6strip(§9string§7 text§6)\n§creturn §9string
+action.description.time=Returns the date in the specified format.\nEnter the date in the format: "yyyy-MM-dd hh:mm:ss".\n\n§6time(§9string§7 format§6)\n§creturn §9string
+action.description.do=Loops the specified number of times.\n\n§6do(§9int§7 count§6) §r{ §8#code §r}
+action.description.break=Interrupts exection of the innermost loop.\n\n§6break()
+action.description.foreach=Loops over the specified array.\nEach element of the array is placed in the variable §6element§r.\n\n§6foreach(§9array[]§7 array§6) §r{ §8#code §r}
+action.description.continue=Skips execution of the innermost loop.\n\n§6continue()
+action.description.while=Runs a loop while the specified condition is true.\n\n§6while(§9bool§7 condition§6) §r{ §8#code §r}
+action.description.stop=Stops the current macro, or macros matching the specified ID.\n\n§6stop(§9string§7 macros_name§6)
+action.description.clearChat=Clears all messages from the chat window.\n\n§6clearChat()
+action.description.getSlot=Gets the id of the slot containing an item matching the specified item id.\n\n§6getSlot(§9string§7 itemID§6, §9int§7 startSlot = 0§6)\n§creturn §9int
+action.description.getSlotItem=Returns information about the item in the specified slot as an array.\n\n§6getSlotItem(§9int§7 slot§6)\n§creturn §9string[§8name, id, meta, stackSize, maxStackSize§9]
+action.description.gui=Opens the specified GUI screen, closes if no name is specified.\nVariants: §7inventory, menu, options, macrosmenu\n\n§6gui(§9string§7 name§6)
+action.description.slotScroll=Scrolls the specified number of slots through the hotbar.\n\n§6slotScroll(§9int§7 scroll§6)
+action.description.pick=Selects the specified item id if it is on the hotbar.\n\n§6pick(§9string§7 itemID§6)\n§creturn §9bool
+action.description.popupMessage=Display a message in the area above the hotbar.\n\n§6popupMessage(§9string§7 message§6, §9bool§7 animate = false§6)
+action.description.setSlotItem=Set the contents of a hot bar slot §7(Creative mode only)§r.\n\n§6setSlotItem(§9string§7 itemId§6, §9int§7 slot§6, §9int§7 stackSize = 1§6)
+action.description.slot=Selects the specified slot on the hot bar.\n\n§6slot(§9int§7 slot§6)
+action.description.slotClick=Simulates clicking on the specified slot in the current GUI.\n\n§6slotClick(§9int§7 slot§6, §9int§7 button = 0§6, §9bool§7 shift = false§6)

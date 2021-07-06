@@ -1,0 +1,92 @@
+menu.title=Macros Core
+
+menu.category.keybind=Кнопки
+menu.category.events=События
+menu.category.gui=Интерфейс
+menu.category.editor=Редактор
+menu.category.settings=Настройки
+
+menu.settings.language=Язык
+
+keybind.edit.key=Редактирование макроса для 
+keybind.edit.event=Редактирование макроса для события 
+
+field.description.macros=Макрос...
+field.description.file=Название файла...
+field.description.name=Название...
+field.description.code=Код...
+field.description.text=Текст...
+field.description.value=Значение...
+field.description.image=Картинка...
+field.saved=Сохранено...
+
+menu.keybinding.save=Вы хотите сохранить свою работу перед выходом?
+menu.keybinding.guide.title=Гайд
+menu.keybinding.guide=Это главное меню для настройки биндов и макросов. Вы можете выбрать любую удобную кнопку, нажать на нее и написать там свой бинд или макрос. Пример: напишите §6/home§r и сохраните изменения, затем закройте меню и нажмите кнопку в игре, и Вы будете телепортированы домой, если такая команда есть на Вашем сервере. Более подробное руководство вы можете найти в нашей документации...
+menu.event.guide.title=Гайд
+menu.event.guide=EVENT Guuuuuuuuuuuide
+
+menu.editor.createfile=Создать новый файл
+
+menu.guiselect.guide=Перетащите экран из списка слева, чтобы назначить слот графического интерфейса. Вы можете назначить один экран на несколько слотов.
+menu.guiselect.slot=Слот
+menu.guiselect.layout=Макет
+
+menu.guiedit.editing=Редактирование 
+
+menu.yes=Да
+menu.no=Нет
+menu.create=Создать
+menu.cancel=Отменить
+menu.save=Сохранить
+
+widget.name.button=Кнопка
+widget.name.text=Текст
+widget.name.slider=Слайдер
+widget.name.indicator=Индикатор
+widget.name.image=Картинка
+
+widget.text=Текст
+widget.dontclose=Не закрывать GUI при клике
+widget.backgroundcolor=Цвет фона
+widget.textcolor=Цвет текста
+widget.color=Цвет
+widget.macros=Макрос:
+widget.positioning=Расположение
+widget.value=Значение
+widget.minvalue=Мин. значение
+widget.maxvalue=Макс. значение
+widget.steps=Этапы
+widget.image=Картинка
+
+pos1=Слева Сверху
+pos2=Слева по Центру
+pos3=Слева Снизу
+pos4=По центру Сверху
+pos5=По центру
+pos6=По центру Снизу
+pos7=Справа Сверху
+pos8=Справа по Центру
+pos9=Справа Снизу
+
+posH=Горизонтально
+posV=Вертикально
+
+posIndicator1=Слева на Право
+posIndicator2=Справа на Лево
+posIndicator3=Сверху Вниз
+posIndicator4=Снизу Вверх
+
+paragraph=§
+
+parser.error.varname=Недопустимое имя переменной
+parser.error.varexists=Переменная
+parser.error.varexists2=уже существует.
+parser.error.cantparse=Невозможно спарсить из
+parser.error.methodexists=Метод
+parser.error.methodexists2=не существует
+parser.error.syntax=Ошибка синтаксиса
+parser.error.expected=Пропущено ; в
+parser.error.file=Файл
+parser.error.notarray=не является массивом.
+parser.error.outofbounds=За пределами массива

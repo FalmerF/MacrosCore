@@ -7,6 +7,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ChatAllowedCharacters;
 import net.smb.Macros.CodeParser;
+import net.smb.Macros.Localisation;
+import net.smb.Macros.MacrosSettings;
+import net.smb.Macros.actions.ActionBase;
 import net.smb.Macros.gui.screens.GuiScreenHeader;
 import net.smb.Macros.util.Color;
 import net.smb.Macros.util.Log;
@@ -48,6 +51,10 @@ public class GuiEditor extends GuiElement {
 	public float scale = 1.0F;
 	
 	public GuiSlider verticalSlider, horizontalSlider;
+	
+	private String actionDesc = "";
+	private String[] decriptionLines;
+	private int descWidth = 0, descHeight = 0;
 	
 	public GuiEditor(int posX, int posY, int width, int height, String text, String description){
 		super(-1, posX, posY, width, height);
@@ -149,14 +156,13 @@ public class GuiEditor extends GuiElement {
 			}
 			
 			if(this.selected) {
+				int currentCharPosX = this.posX+3;
+				int currentCharPosY = this.posY+3;
+				if(!text.equals("")) {
+					currentCharPosX = this.posX+3+widthToCursor+textAnchorX;
+					currentCharPosY = this.posY+3+textAnchorY+lineHeight*cursorLine;
+				}
 				if(displayEditPlace) {
-					int currentCharPosX = this.posX+3;
-					int currentCharPosY = this.posY+3;
-					if(!text.equals("")) {
-						currentCharPosX = this.posX+3+widthToCursor+textAnchorX;
-						currentCharPosY = this.posY+3+textAnchorY+lineHeight*cursorLine;
-					}
-					
 					RenderUtil.drawString("|", currentCharPosX, currentCharPosY, Color.color_4, false, scale, false);
 				}
 				
@@ -191,6 +197,19 @@ public class GuiEditor extends GuiElement {
 						}
 					}
 					GL11.glDisable(GL11.GL_COLOR_LOGIC_OP);
+				}
+				RenderUtil.glScissorDisable();
+				
+				if(!this.actionDesc.equals("")) {
+					int dPosX = Math.max(Math.min(currentCharPosX - 2 - descWidth/2, mc.currentScreen.width-descWidth), 0);
+					int dPosY = Math.max(Math.min(currentCharPosY - 6 - descHeight, mc.currentScreen.height-descHeight), 0);
+					RenderUtil.zLevel = 11;
+					RenderUtil.setColor(Color.color_3, 0.9F);
+					RenderUtil.drawRect(dPosX, dPosY, dPosX+descWidth, dPosY+descHeight);
+					for(int i = 0; i < decriptionLines.length; i++) {
+						RenderUtil.drawString(decriptionLines[i], dPosX+2, dPosY+2+10*i, Color.color_4, false);
+					}
+					RenderUtil.zLevel = 0;
 				}
 			}
 			
@@ -291,30 +310,65 @@ public class GuiEditor extends GuiElement {
     		else if(keyId == Keyboard.KEY_RETURN) {
     			addText(String.valueOf((char)10));
     		}
+    		else if(keyId == Keyboard.KEY_TAB) {
+    			addTab();
+    		}
     		else addText(String.valueOf(key));
     	}
 	}
 	
 	public void addText(String add) {
-		saved = false;
 		add = filerAllowedCharacters(add);
-		if(!add.equals("")) delete(true);
-		String beforeText = text.substring(0, cursorPos);
-		String afterText = text.substring(cursorPos, text.length());
-		int addedSize = add.length();
-		
-		text = beforeText + add + afterText;
-		if(addedSize != 0) moveCursor(addedSize);
-		
-		String[] lines = getLines(text);
-		maxWidthLine = 0;
-		for(String line : lines) {
-			int lineWidth = RenderUtil.fontRenderer.getStringWidth(line);
-			if(lineWidth > maxWidthLine) maxWidthLine = lineWidth;
+		if(!add.equals("")) {
+			saved = false;
+			delete(true);
+			String beforeText = text.substring(0, cursorPos);
+			String afterText = text.substring(cursorPos, text.length());
+			int addedSize = add.length();
+			
+			text = beforeText + add + afterText;
+			if(addedSize != 0) moveCursor(addedSize);
+			
+			String[] lines = getLines(text);
+			maxWidthLine = 0;
+			for(String line : lines) {
+				int lineWidth = RenderUtil.fontRenderer.getStringWidth(line);
+				if(lineWidth > maxWidthLine) maxWidthLine = lineWidth;
+			}
 		}
 	}
 	public void delete() {
 		delete(false);
+	}
+	
+	public void addTab() {
+		String[] lines = getLines(text);
+		//cursorLine
+		//cursorPosInLine
+		int spaceCount = 0;
+		char[] chars = lines[cursorLine].toCharArray();
+		for(char c : chars) {
+			if(c != ' ') break;
+			spaceCount++;
+		}
+		if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+			if(spaceCount != 0) {
+				spaceCount = spaceCount%4 != 0 ? spaceCount%4 : 4;
+				int cursorp = cursorPosInLine-spaceCount;
+				moveCursor(-cursorPosInLine+spaceCount);
+				for(int i = 0; i < spaceCount; i++) delete(false);
+				moveCursor(cursorp);
+			}
+		}
+		else {
+			String spaces = "";
+			spaceCount = spaceCount%4 != 0 ? spaceCount%4 : 4;
+			for(int i = 0; i < spaceCount; i++) spaces += " ";
+			int cursorp = cursorPosInLine;
+			moveCursor(-cursorPosInLine);
+			addText(spaces);
+			moveCursor(cursorp);
+		}
 	}
 	
 	public void delete(boolean onlySelection) {
@@ -350,6 +404,7 @@ public class GuiEditor extends GuiElement {
     	if(selected) {
     	}
     	else {
+    		setDescription("");
     		((GuiScreenHeader)Minecraft.getMinecraft().currentScreen).actionReleased(this);
     	}
     }
@@ -381,6 +436,8 @@ public class GuiEditor extends GuiElement {
 	
 	public void setCursorPos(int num, boolean moveSelected) {
 		cursorPos = Math.max(Math.min(num, text.length()), 0);
+		timer = 5;
+		displayEditPlace = true;
 		String[] lines = getLines(text);
 		if(moveSelected) {
 			this.selectionPos = cursorPos;
@@ -424,6 +481,48 @@ public class GuiEditor extends GuiElement {
 			this.fastMove = true;
 			this.moveToCursor = true;
 		}
+		setDescription("");
+		
+		if(!MacrosSettings.getBool("codehints")) {
+			try {
+				int wordStart = cursorPosInLine;
+				char[] chars = lines[cursorLine].toCharArray();
+				for(;wordStart > 0;wordStart--) {
+					if(" +-=/*{}(),;\"%><".indexOf(chars[wordStart]) != -1) break;
+				}
+				if(wordStart > 0) wordStart++;
+				String word = "";
+				for(;wordStart < chars.length; wordStart++) {
+					word += chars[wordStart];
+					if(" +-=/*{}(),;\"%><".indexOf(chars[wordStart]) != -1) break;
+				}
+				if(word.matches("^([a-zA-Z_0-9]*)\\($")) {
+					word = word.substring(0, word.length()-1);
+					ActionBase action = CodeParser.getAction(word);
+					if(action != null && !action.description.equals("")) {
+						setDescription("\u00A76" + action.getName() + "\n" + action.description);
+					}
+					else {
+						setDescription("");
+					}
+				}
+			} catch(Exception e) {setDescription(""); e.printStackTrace();}
+		}
+		else {
+			setDescription("");
+		}
+	}
+	
+	public void setDescription(String description) {
+		this.actionDesc = description;
+		decriptionLines = description.replaceAll("\\\\n", " \n").split("\n");
+		descWidth = 0;
+		for(String line : decriptionLines) {
+			int lineWidth = RenderUtil.fontRenderer.getStringWidth(line);
+			if(lineWidth > descWidth) descWidth = lineWidth;
+		}
+		descWidth += 4;
+		descHeight = 10*decriptionLines.length+4;
 	}
 	
 	public int getCharAtPos(int posX, int posY) {

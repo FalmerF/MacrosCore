@@ -171,11 +171,16 @@ public class GuiScreenKeyBinding extends GuiScreenElement {
 		editPanel.addGuiElement(new GuiButtonWithIcon(2, currentScreen.width-35, 5, 20, 1));
 		editPanel.setVisible(false);
 		
-		GuiPanel panel = new GuiPanel(-1, 530, posY, 140, 230);
+		GuiPanel panel = new GuiPanel(-1, Math.max(currentScreen.width-150, 530), posY, 140, 230);
 		panel.addGuiElement(new GuiText(10, 10, 1.3F, Localisation.getString("menu.keybinding.guide.title")));
-		panel.addGuiElement(new GuiText(10, 20, 1.0F, Localisation.getString("menu.keybinding.guide")));
+		panel.addGuiElement(new GuiText(10, 25, 1.0F, Localisation.getString("menu.keybinding.guide"), 120));
 		
 		guiElements.add(panel);
+	}
+	
+	public void update() {
+		editPanel.update();
+		for(GuiElement element : guiElements) element.update();
 	}
 	
 	public void draw(Minecraft mc, int positionX, int positionY) {

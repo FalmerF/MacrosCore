@@ -20,6 +20,7 @@ public class MacrosSettings {
 			if(!config.exists()) {
 				macrosDir.mkdir();
 				config.createNewFile();
+				params.put("openKey", "41");
 			}
 			else {
 		    	params.clear();

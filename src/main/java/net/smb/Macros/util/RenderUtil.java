@@ -17,6 +17,7 @@ public class RenderUtil {
 	
 	public static boolean scissor;
 	public static int sX, sY, sW, sH;
+	public static float zLevel = 0.0F;
 	
 	public static void setColor(Color col) {
 		setColor(col, col.colorA);
@@ -31,11 +32,24 @@ public class RenderUtil {
     }
     
     public static void drawFromAtlas(int posX, int posY, int texturePosX, int texturePosY, int width, int height) {
-    	GL11.glEnable(GL11.GL_ALPHA_TEST);
-		GL11.glEnable(GL11.GL_BLEND);
-    	Gui.func_152125_a(posX, posY, texturePosX, texturePosY, 1, 1, width, height, 20, 20);
     	GL11.glDisable(GL11.GL_ALPHA_TEST);
+		GL11.glEnable(GL11.GL_BLEND);
+		drawTexture(posX, posY, texturePosX, texturePosY, 1, 1, width, height, 20, 20);
+    	GL11.glEnable(GL11.GL_ALPHA_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
+    }
+    
+    public static void drawTexture(int posX, int posY, float u, float v, int var1, int var2, int width, int height, float var3, float var4)
+    {
+        float var10 = 1.0F / var3;
+        float var11 = 1.0F / var4;
+        Tessellator var12 = Tessellator.instance;
+        var12.startDrawingQuads();
+        var12.addVertexWithUV((double)posX, (double)(posY + height), zLevel, (double)(u * var10), (double)((v + (float)var2) * var11));
+        var12.addVertexWithUV((double)(posX + width), (double)(posY + height), zLevel, (double)((u + (float)var1) * var10), (double)((v + (float)var2) * var11));
+        var12.addVertexWithUV((double)(posX + width), (double)posY, zLevel, (double)((u + (float)var1) * var10), (double)(v * var11));
+        var12.addVertexWithUV((double)posX, (double)posY, zLevel, (double)(u * var10), (double)(v * var11));
+        var12.draw();
     }
     
     public static void drawString(String text, int posX, int posY, Color color) {
@@ -93,22 +107,22 @@ public class RenderUtil {
     	fontRenderer = new StandartFontRenderer(Minecraft.getMinecraft().gameSettings, new ResourceLocation("textures/font/ascii.png"), Minecraft.getMinecraft().getTextureManager(), true);
     }
     
-    public static void drawRect(int p_73734_0_, int p_73734_1_, int p_73734_2_, int p_73734_3_)
+    public static void drawRect(int pos1, int pos2, int pos3, int pos4)
     {
         int var5;
 
-        if (p_73734_0_ < p_73734_2_)
+        if (pos1 < pos3)
         {
-            var5 = p_73734_0_;
-            p_73734_0_ = p_73734_2_;
-            p_73734_2_ = var5;
+            var5 = pos1;
+            pos1 = pos3;
+            pos3 = var5;
         }
 
-        if (p_73734_1_ < p_73734_3_)
+        if (pos2 < pos4)
         {
-            var5 = p_73734_1_;
-            p_73734_1_ = p_73734_3_;
-            p_73734_3_ = var5;
+            var5 = pos2;
+            pos2 = pos4;
+            pos4 = var5;
         }
 
         Tessellator var9 = Tessellator.instance;
@@ -116,13 +130,43 @@ public class RenderUtil {
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         OpenGlHelper.glBlendFunc(770, 771, 1, 0);
         var9.startDrawingQuads();
-        var9.addVertex((double)p_73734_0_, (double)p_73734_3_, 0.0D);
-        var9.addVertex((double)p_73734_2_, (double)p_73734_3_, 0.0D);
-        var9.addVertex((double)p_73734_2_, (double)p_73734_1_, 0.0D);
-        var9.addVertex((double)p_73734_0_, (double)p_73734_1_, 0.0D);
+        var9.addVertex((double)pos1, (double)pos4, zLevel);
+        var9.addVertex((double)pos3, (double)pos4, zLevel);
+        var9.addVertex((double)pos3, (double)pos2, zLevel);
+        var9.addVertex((double)pos1, (double)pos2, zLevel);
         var9.draw();
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_BLEND);
+    }
+    
+    public static void drawGradientRect(int pos1, int pos2, int pos3, int pos4, int startColor, int endColor)
+    {
+        float var7 = (float)(startColor >> 24 & 255) / 255.0F;
+        float var8 = (float)(startColor >> 16 & 255) / 255.0F;
+        float var9 = (float)(startColor >> 8 & 255) / 255.0F;
+        float var10 = (float)(startColor & 255) / 255.0F;
+        float var11 = (float)(endColor >> 24 & 255) / 255.0F;
+        float var12 = (float)(endColor >> 16 & 255) / 255.0F;
+        float var13 = (float)(endColor >> 8 & 255) / 255.0F;
+        float var14 = (float)(endColor & 255) / 255.0F;
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_ALPHA_TEST);
+        OpenGlHelper.glBlendFunc(770, 771, 1, 0);
+        GL11.glShadeModel(GL11.GL_SMOOTH);
+        Tessellator var15 = Tessellator.instance;
+        var15.startDrawingQuads();
+        var15.setColorRGBA_F(var8, var9, var10, var7);
+        var15.addVertex((double)pos3, (double)pos2, zLevel);
+        var15.addVertex((double)pos1, (double)pos2, zLevel);
+        var15.setColorRGBA_F(var12, var13, var14, var11);
+        var15.addVertex((double)pos1, (double)pos4, zLevel);
+        var15.addVertex((double)pos3, (double)pos4, zLevel);
+        var15.draw();
+        GL11.glShadeModel(GL11.GL_FLAT);
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glEnable(GL11.GL_ALPHA_TEST);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
     }
     
     public static void glScissor(int x, int y, int width, int height){

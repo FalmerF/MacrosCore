@@ -1,4 +1,4 @@
-package net.smb.Macros.Actions;
+package net.smb.Macros.actions;
 
 import net.smb.Macros.CodeParser;
 import net.smb.Macros.ParserError;
@@ -11,7 +11,8 @@ public class ActionElse extends ActionBase {
 	@Override
 	public Object execute(CodeParser parser, String arg, String[] args, String code) {
 		if((parser.lastAction instanceof ActionIf && !((ActionIf)parser.lastAction).lastResult) || (parser.lastAction instanceof ActionElseIf && !((ActionElseIf)parser.lastAction).lastResult)) {
-			CodeParser newParser = new CodeParser(parser.parserName, parser);
+			CodeParser newParser = new CodeParser(parser.parserName + " else", parser);
+			newParser.alwaysCode = true;
 			newParser.executeCode(code);
 		}
 		else if(!(parser.lastAction instanceof ActionIf) && !(parser.lastAction instanceof ActionElseIf)) ParserError.syntax(parser, "else");

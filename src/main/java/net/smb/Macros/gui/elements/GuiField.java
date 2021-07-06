@@ -29,6 +29,7 @@ public class GuiField extends GuiElement {
 	
 	public boolean saved = true;
 	public boolean code = false;
+	public boolean numbers = false;
 	
 	public GuiField(int posX, int posY, int width, float scale, String text, String description){
 		super(-1, posX, posY, width, 20);
@@ -37,19 +38,33 @@ public class GuiField extends GuiElement {
 		this.description = description;
 	}
 	
+	public void update() {
+		timer--;
+		if(timer <= 0) {
+			timer = 5;
+			displayEditPlace = !displayEditPlace;
+		}
+	}
+	
 	public void draw(Minecraft mc, int positionX, int positionY) {
 		if(this.visible) {
 			mc.getTextureManager().bindTexture(ResourceLocations.guiAtlas);
+			
+			int outlineX = this.posX-1;
+			int outlineY = this.posY-1;
+			int outlineWidth = this.width+2;
+			int outlineHeight = this.height+2;
+			
+			RenderUtil.setColor(Color.color_8);
+			RenderUtil.drawFromAtlas(outlineX, outlineY, 5, 1, outlineHeight, outlineHeight);
+			RenderUtil.drawFromAtlas(outlineX+outlineHeight, outlineY, 7, 1, outlineWidth-outlineHeight*2, outlineHeight);
+			RenderUtil.drawFromAtlas(outlineX+outlineWidth-outlineHeight, outlineY, 9, 1, outlineHeight, outlineHeight);
+			
 			if(!this.selected) RenderUtil.setColor(Color.color_7);
 			else RenderUtil.setColor(Color.color_10);
 			RenderUtil.drawFromAtlas(this.posX, this.posY, 5, 1, this.height, this.height);
 			RenderUtil.drawFromAtlas(this.posX+this.height, this.posY, 7, 1, this.width-this.height*2, this.height);
 			RenderUtil.drawFromAtlas(this.posX+this.width-this.height, this.posY, 9, 1, this.height, this.height);
-			
-			RenderUtil.setColor(Color.color_8);
-			RenderUtil.drawFromAtlas(this.posX, this.posY, 5, 3, this.height, this.height);
-			RenderUtil.drawFromAtlas(this.posX+this.height, this.posY, 7, 3, this.width-this.height*2, this.height);
-			RenderUtil.drawFromAtlas(this.posX+this.width-this.height, this.posY, 9, 3, this.height, this.height);
 			
 			String displayText = text;
 			Color color = Color.color_4;
@@ -60,21 +75,15 @@ public class GuiField extends GuiElement {
 			else if(!text.equals("") && code) {
 				displayText = CodeParser.setColor(text);
 			}
-			RenderUtil.glScissor(this.posX+3, this.posY+3, this.width-6, this.height-6);
+			RenderUtil.glScissor(this.posX+1, this.posY, this.width-2, this.height);
 			
-			RenderUtil.drawString(displayText, this.posX+3+textAnchorX, this.posY+5, color, false, scale, false);
+			RenderUtil.drawString(displayText, this.posX+3+textAnchorX, this.posY+(int)Math.floor(this.height/4.0f), color, false, scale, false);
 			
 			if(this.selected) {
-				timer--;
-				if(timer <= 0) {
-					timer = 35;
-					displayEditPlace = !displayEditPlace;
-				}
-				
 				if(displayEditPlace) {
 					int currentCharPos = 0;
 					if(!text.equals("")) currentCharPos = (int)(RenderUtil.fontRenderer.getStringWidth(text.substring(0, cursorPos))*scale)+textAnchorX;
-					RenderUtil.drawString("|", this.posX+3+currentCharPos, this.posY+5, Color.color_4, false, scale, false);
+					RenderUtil.drawString("|", this.posX+3+currentCharPos, this.posY+(int)Math.floor(this.height/4.0f), Color.color_4, false, scale, false);
 				}
 				
 				if(this.pressed) {
@@ -95,7 +104,7 @@ public class GuiField extends GuiElement {
 					RenderUtil.setColor(Color.color_11);
 					GL11.glEnable(GL11.GL_COLOR_LOGIC_OP);
 			        GL11.glLogicOp(GL11.GL_OR_REVERSE);
-					RenderUtil.drawRect(firstPos, this.posY+5, firstPos+selectedWidth, this.posY+6+RenderUtil.fontRenderer.FONT_HEIGHT);
+					RenderUtil.drawRect(firstPos, this.posY+(int)Math.floor(this.height/4.0f), firstPos+selectedWidth, this.posY+6+RenderUtil.fontRenderer.FONT_HEIGHT);
 					GL11.glDisable(GL11.GL_COLOR_LOGIC_OP);
 				}
 			}
@@ -176,23 +185,25 @@ public class GuiField extends GuiElement {
 	}
 	
 	public void addText(String add) {
-		saved = false;
-		add = ChatAllowedCharacters.filerAllowedCharacters(add);
-		if(!add.equals("")) delete(true);
-		String beforeText = text.substring(0, cursorPos);
-		String afterText = text.substring(cursorPos, text.length());
-		int addedSize = 0;
-		for(char c : add.toCharArray()) {
-			if(this.limit != 0 && this.text.length() >= this.limit) {
-				break;
+		add = filerAllowedCharacters(add);
+		if(!add.equals("")) {
+			delete(true);
+			saved = false;
+			String beforeText = text.substring(0, cursorPos);
+			String afterText = text.substring(cursorPos, text.length());
+			int addedSize = 0;
+			for(char c : add.toCharArray()) {
+				if(this.limit != 0 && this.text.length() >= this.limit) {
+					break;
+				}
+				else {
+					beforeText += c;
+					addedSize++;
+				}
 			}
-			else {
-				beforeText += c;
-				addedSize++;
-			}
+			text = beforeText + afterText;
+			if(addedSize != 0) moveCursor(addedSize);
 		}
-		text = beforeText + afterText;
-		if(addedSize != 0) moveCursor(addedSize);
 	}
 	public void delete() {
 		delete(false);
@@ -246,6 +257,8 @@ public class GuiField extends GuiElement {
 	
 	public void setCursorPos(int num, boolean moveSelected) {
 		cursorPos = Math.max(Math.min(num, text.length()), 0);
+		timer = 5;
+		displayEditPlace = true;
 		if(moveSelected) this.selectionPos = cursorPos;
 		
 		int widthToCursor = 0;
@@ -278,4 +291,45 @@ public class GuiField extends GuiElement {
 		
 		return text.substring(pos1, pos2);
 	}
+	
+	public String filerAllowedCharacters(String text)
+    {
+        StringBuilder var1 = new StringBuilder();
+        char[] var2 = text.toCharArray();
+        int var3 = var2.length;
+
+        if(numbers) {
+        	 for (int var4 = 0; var4 < var3; ++var4)
+             {
+                 char var5 = var2[var4];
+
+                 if (isAllowedCharacterNum(var5))
+                 {
+                     var1.append(var5);
+                 }
+             }
+        }
+        else {
+	        for (int var4 = 0; var4 < var3; ++var4)
+	        {
+	            char var5 = var2[var4];
+	
+	            if (isAllowedCharacter(var5))
+	            {
+	                var1.append(var5);
+	            }
+	        }
+        }
+
+        return var1.toString();
+    }
+	
+	public boolean isAllowedCharacter(char c)
+    {
+        return c == 10 || (c != 167 && c >= 32 && c != 127);
+    }
+	public boolean isAllowedCharacterNum(char c)
+    {
+        return "0123456789".indexOf(c) != -1;
+    }
 }

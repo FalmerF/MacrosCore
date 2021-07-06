@@ -1,4 +1,4 @@
-package net.smb.Macros.Actions;
+package net.smb.Macros.actions;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -35,6 +35,7 @@ public class ActionRun extends ActionBase {
 		             
 		             if(!text.equals("")) {
 		            	 CodeParser newParser = new CodeParser("[" + fileName + "]", null);
+		            	 newParser.alwaysCode = true;
 		            	 newParser.executeCode(text);
 		             }
 				} catch(Exception e) {}

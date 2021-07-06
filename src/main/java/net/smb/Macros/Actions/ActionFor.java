@@ -1,4 +1,4 @@
-package net.smb.Macros.Actions;
+package net.smb.Macros.actions;
 
 import net.smb.Macros.CodeParser;
 import net.smb.Macros.ParserError;
@@ -14,6 +14,7 @@ public class ActionFor extends ActionBase {
 	public Object execute(CodeParser parser, String arg, String[] args, String code) {
 		if(args.length == 3 && !args[1].equals("") && !code.equals("")) {
 			CodeParser newParser = new CodeParser(parser.parserName, parser);
+			newParser.alwaysCode = true;
 			if(!args[0].equals("")) {
 				newParser.executeCode(args[0] + ";");
 			}
@@ -21,7 +22,9 @@ public class ActionFor extends ActionBase {
 				for(;newParser.getBool(args[1]); newParser.executeCode(args[2] + ";")) {
 					if(parser.getError()) break;
 					CodeParser forParser = new CodeParser(newParser.parserName + " for", newParser);
+					forParser.alwaysCode = true;
 					forParser.executeCode(code);
+					if(forParser.getBreak()) break;
 					try {
 						Thread.sleep((long) (1));
 					} catch (Exception e) {}
@@ -31,7 +34,9 @@ public class ActionFor extends ActionBase {
 				for(;newParser.getBool(args[1]);) {
 					if(parser.getError()) break;
 					CodeParser forParser = new CodeParser(newParser.parserName + " for", newParser);
+					forParser.alwaysCode = true;
 					forParser.executeCode(code);
+					if(forParser.getBreak()) break;
 					try {
 						Thread.sleep((long) (1));
 					} catch (Exception e) {}

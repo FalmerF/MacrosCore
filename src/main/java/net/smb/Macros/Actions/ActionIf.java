@@ -1,4 +1,4 @@
-package net.smb.Macros.Actions;
+package net.smb.Macros.actions;
 
 import net.smb.Macros.CodeParser;
 
@@ -13,7 +13,8 @@ public class ActionIf extends ActionBase {
 	public Object execute(CodeParser parser, String arg, String[] args, String code) {
 		if(!arg.equals("") && parser.getBool(arg)) {
 			lastResult = true;
-			CodeParser newParser = new CodeParser(parser.parserName, parser);
+			CodeParser newParser = new CodeParser(parser.parserName + " if", parser);
+			newParser.alwaysCode = true;
 			newParser.executeCode(code);
 		}
 		else lastResult = false;

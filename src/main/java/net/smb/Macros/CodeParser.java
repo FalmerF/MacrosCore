@@ -1,6 +1,7 @@
 package net.smb.Macros;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -8,7 +9,9 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.smb.Macros.Actions.ActionBase;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.smb.Macros.actions.ActionBase;
 import net.smb.Macros.util.Log;
 
 public class CodeParser {
@@ -16,21 +19,29 @@ public class CodeParser {
 	public CodeParser parentParser;
 	public static Map<String, Object> globalVars = new TreeMap<String, Object>();
 	private static Map<String, ActionBase> actions = new TreeMap<String, ActionBase>();
+	public static List<CodeParser> activeParsers = new ArrayList<CodeParser>();
+	public static CodeParser globalParser;
 	
 	public Map<String, Object> vars = new TreeMap<String, Object>();
 	
-	public static Pattern intPattern = Pattern.compile("^([0-9]+)$");
-	public static Pattern floatPattern = Pattern.compile("^([0-9.]+)$");
+	public static Pattern intPattern = Pattern.compile("^-?([0-9]+)$");
+	public static Pattern floatPattern = Pattern.compile("^-?([0-9.]+)$");
 	public static Pattern stringPattern = Pattern.compile("\"(.*)\"$");
 	public static Pattern boolPattern = Pattern.compile("^(true)|(false)$");
+	public static Pattern initialVarPattern = Pattern.compile("^(global\\s)?((int)|(float)|(string)|(bool))(\\[\\])?\\s([a-zA-Z_0-9]*)(\\s*=\\s*(.+))?$");
+	public static Pattern varSetPattern = Pattern.compile("^([a-zA-Z_0-9]+)(\\[([0-9]+)\\])?\\s*=\\s*(.+)$");
+	public static Pattern arrayPattern = Pattern.compile("^([a-zA-Z_0-9]+)(\\[([0-9]+)\\]){1}$");
 	
 	private String runningCode;
 	
-	private boolean error;
+	private boolean error, breakParser = false, continueParser = false;
+	public boolean returnVar = true, alwaysCode = false;
 	
 	private CodeParser instance;
 	
 	public ActionBase lastAction;
+	
+	public long start;
 	
 	public CodeParser(String name, CodeParser parentParser){
 		instance = this;
@@ -38,98 +49,197 @@ public class CodeParser {
 		this.parentParser = parentParser;
 	}
 	
-	public void executeCode(String code) {
-		runningCode = code;
-		String command = "";
-		int bracketsCount = 0;
-		boolean quotes = false;
-		char lastSymbol = ' ';
-		main:
-		for(char c : runningCode.toCharArray()) {
-			if(c == '"' && lastSymbol != '\\') quotes = !quotes;
-			if(quotes) command += c;
-			else {
-				if(c == ';' && bracketsCount == 0) {
-					runCommand(command, true);
-					command = "";
-					try {
-						Thread.sleep((long) (1));
-					} catch (Exception e) {}
-				}
-				else if(c == '{') {
-					bracketsCount++;
-					command += c;
-				}
-				else if(c == '}') {
-					bracketsCount--;
-					command += c;
-				}
-				else if(command.equals("") && c == ' ') continue;
-				else command += c;
-			}
+	public boolean executeCode(String code) {
+		if((code.startsWith("$$") || alwaysCode) && !code.equals("")) {
+			runningCode = code.replace("$$", "");
+			String command = "";
+			int bracketsCount = 0;
+			boolean quotes = false;
+			char lastSymbol = ' ';
+			if(this.parentParser == null) activeParsers.add(this);
+			start = System.currentTimeMillis();
 			
-			lastSymbol = c;
-			
-			if(error) {
-				if(parentParser != null) parentParser.error = true;
-				break main;
+			main:
+			for(char c : runningCode.toCharArray()) {
+				if(c == '"' && lastSymbol != '\\') quotes = !quotes;
+				if(quotes) command += c;
+				else {
+					if(c == ';' && bracketsCount == 0) {
+						runCommand(command, true);
+						command = "";
+						try {
+							Thread.sleep((long) (1));
+						} catch (Exception e) {}
+					}
+					else if(c == '{') {
+						bracketsCount++;
+						command += c;
+					}
+					else if(c == '}') {
+						bracketsCount--;
+						command += c;
+					}
+					else if(command.equals("") && c == ' ') continue;
+					else command += c;
+				}
+				
+				lastSymbol = c;
+				
+				if(error || parentError()) {
+					if(parentParser != null) parentParser.error = true;
+					break main;
+				}
+				else if(breakParser) break main;
+				else if(continueParser) {
+					continueParser = false;
+					break main;
+				}
 			}
+			if(!error && !command.equals("")) ParserError.expected(instance, command);
+			if(parentParser != null) parentParser.returnVar = returnVar;
 		}
-		if(!error && !command.equals("")) ParserError.expected(instance, command);
+		else if(!code.equals("")) {
+			((EntityClientPlayerMP)Minecraft.getMinecraft().thePlayer).sendChatMessage(code);
+		}
+		activeParsers.remove(this);
+		return returnVar;
 	}
 	
 	public void setError() {
 		this.error = true;
+		activeParsers.remove(this);
 		if(this.parentParser != null) this.parentParser.setError();
 	}
 	
 	public boolean getError() {
 		return error;
 	}
+	public boolean getBreak() {
+		return breakParser;
+	}
+	
+	public boolean breakParser() {
+		if(this.parserName.endsWith("do") || this.parserName.endsWith("for") || this.parserName.endsWith("foreach") || this.parserName.endsWith("while")) {
+			breakParser = true;
+			return true;
+		}
+		else if(parentParser != null && parentParser.breakParser()) {
+			breakParser = true;
+			return true;
+		}
+		else return false;
+	}
+	
+	public boolean continueParser() {
+		if(this.parserName.endsWith("do") || this.parserName.endsWith("for") || this.parserName.endsWith("foreach") || this.parserName.endsWith("while")) {
+			continueParser = true;
+			return true;
+		}
+		else if(parentParser != null && parentParser.continueParser()) {
+			continueParser = true;
+			return true;
+		}
+		else return false;
+	}
+	
+	public boolean parentError() {
+		if(this.parentParser != null && this.parentParser.error) return true;
+		else return false;
+	}
 	
 	public void runCommand(String command, boolean executeCode) {
-		String[] args = command.split(" ");
-		if(Pattern.compile("^((int)|(float)|(string)|(bool))\\s([a-zA-Z_0-9])").matcher(command).find()) {
-			if(hasVar(args[1])) {
-				ParserError.varAlreadyExists(instance, args[1]);
+		Matcher matcherInitial = initialVarPattern.matcher(command);
+		Matcher matcherVarSet = varSetPattern.matcher(command);
+		try {
+		//Just vars
+		if(matcherInitial.matches()) {
+			boolean global = matcherInitial.group(1) != null;
+			String varType = matcherInitial.group(2);
+			boolean isArray = matcherInitial.group(7) != null;
+			String varName = matcherInitial.group(8);
+			String value = matcherInitial.group(10);
+			
+			if(hasVar(varName) && !global) {
+				ParserError.varAlreadyExists(instance, varName);
+				return;
 			}
-			else if(intPattern.matcher(args[1].toLowerCase()).find()) {
-				ParserError.invalidVarName(instance, args[1]);
+			else if(intPattern.matcher(varName.toLowerCase()).find()) {
+				ParserError.invalidVarName(instance, varName);
+				return;
 			}
-			if(args[0].equals("int")) {
-				if(args.length > 2) {
-					String[] value = command.split("=", 2);
-					vars.put(args[1], getInt(value[1]));
+			if(varType.equals("int")) {
+				if(!isArray) {
+					if(value != null && !value.equals("")) {
+						addVar(varName, getInt(value), global);
+					}
+					else addVar(varName, 0, global);
+				} else {
+					if(value != null && !value.equals("")) {
+						putArray(varName, value, Integer.class);
+					}
+					else {
+						TreeMap<Integer, Integer> array = new TreeMap<Integer, Integer>();
+						array.put(-1, 1);
+						addVar(varName, array, global);
+					}
 				}
-				else vars.put(args[1], 0);
 			}
-			else if(args[0].equals("float")) {
-				if(args.length > 2) {
-					String[] value = command.split("=", 2);
-					vars.put(args[1], getFloat(value[1]));
+			else if(varType.equals("float")) {
+				if(!isArray) {
+					if(value != null && !value.equals("")) {
+						addVar(varName, getFloat(value), global);
+					}
+					else addVar(varName, 0, global);
+				} else {
+					if(value != null && !value.equals("")) {
+						putArray(varName, value, Float.class);
+					}
+					else {
+						TreeMap<Integer, Float> array = new TreeMap<Integer, Float>();
+						array.put(-1, 1.0F);
+						addVar(varName, array, global);
+					}
 				}
-				else vars.put(args[1], 0);
 			}
-			else if(args[0].equals("string")) {
-				if(args.length > 2) {
-					String[] value = command.split("=", 2);
-					vars.put(args[1], getString(value[1]));
+			else if(varType.equals("string")) {
+				if(!isArray) {
+					if(value != null && !value.equals("")) {
+						addVar(varName, getString(value), global);
+					}
+					else addVar(varName, "", global);
+				} else {
+					if(value != null && !value.equals("")) {
+						putArray(varName, value, String.class);
+					}
+					else {
+						TreeMap<Integer, String> array = new TreeMap<Integer, String>();
+						array.put(-1, "string");
+						addVar(varName, array, global);
+					}
 				}
-				else vars.put(args[1], "");
 			}
-			if(args[0].equals("bool")) {
-				if(args.length > 2) {
-					String[] value = command.split("=", 2);
-					vars.put(args[1], getBool(value[1]));
+			else if(varType.equals("bool")) {
+				if(!isArray) {
+					if(value != null && !value.equals("")) {
+						addVar(varName, getBool(value), global);
+					}
+					else addVar(varName, false, global);
+				} else {
+					if(value != null && !value.equals("")) {
+						putArray(varName, value, Boolean.class);
+					}
+					else {
+						TreeMap<Integer, Boolean> array = new TreeMap<Integer, Boolean>();
+						array.put(-1, true);
+						addVar(varName, array, global);
+					}
 				}
-				else vars.put(args[1], false);
 			}
 		}
-		else if(Pattern.compile("^([a-zA-Z_0-9]+)\\s*=(.+)$").matcher(command).find()) {
-			Matcher matcher = Pattern.compile("^([a-zA-Z_0-9]+)\\s*=(.+)$").matcher(command);
-			matcher.find();
-			String varName = matcher.group(1);
-			String value = matcher.group(2);
+		else if(matcherVarSet.matches()) {
+			String varName = matcherVarSet.group(1);
+			int arrayNum = matcherVarSet.group(3) != null ? Integer.parseInt(matcherVarSet.group(3)) : -1;
+			String value = matcherVarSet.group(4);
 			if(hasVar(varName)) {
 				Object varValue = getVar(varName);
 				if(varValue instanceof Integer)
@@ -140,6 +250,10 @@ public class CodeParser {
 					setVar(varName, getString(value));
 				else if(varValue instanceof Boolean)
 					setVar(varName, getBool(value));
+				else if(varValue instanceof TreeMap && arrayNum != -1) {
+					putToArray(varName, value, arrayNum);
+					
+				}
 			}
 			else ParserError.varDoesntExist(instance, varName);
 		}
@@ -147,13 +261,56 @@ public class CodeParser {
 			runAction(command, true);
 		}
 		else ParserError.syntax(instance, command);
+		} catch(Exception e) {
+			ParserError.customError(this, "\"" + command + "\" - " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
+	public void putArray(String varName, String value, Class varClass) {
+		Object val = null;
+		if(value.matches("^([a-zA-Z_0-9]+)(\\[([0-9]+)\\])?$")) val = getVar(value);
+		else if(value.matches("^([a-zA-Z_0-9]+)(\\((.+)\\))$")) val = runAction(value, true);
+		
+		if(!(val instanceof TreeMap)) {
+			ParserError.notArray(instance, value);
+			return;
+		}
+		
+		TreeMap array = (TreeMap) val;
+		if(!(array.get(-1).getClass() == varClass)) {
+			ParserError.cantParse(instance, varName);
+			return;
+		}
+		vars.put(varName, array.clone());
+	}
+	
+	public void putToArray(String varName, String value, int arrayNum) {
+		if(arrayNum < 0) {
+			ParserError.outOfBounds(this, varName);
+			return;
+		}
+		TreeMap array = (TreeMap) getVar(varName);
+		Class arrayClass = array.get(-1).getClass();
+		if(arrayClass == Integer.class) {
+			array.put(arrayNum, getInt(value));
+		}
+		else if(arrayClass == Float.class) {
+			array.put(arrayNum, getFloat(value));
+		}
+		else if(arrayClass == String.class) {
+			array.put(arrayNum, getString(value));
+		}
+		else if(arrayClass == Boolean.class) {
+			array.put(arrayNum, getBool(value));
+		}
 	}
 	
 	public int getInt(String value) {
 		try {
 			value = replaceSpaces(value);
 			value = replaceActions(value);
-			if(Pattern.compile("^([0-9]+)$").matcher(value).find()) {
+			if(intPattern.matcher(value).find()) {
 				return Integer.parseInt(value);
 			}
 			else if(Pattern.compile("\\(").matcher(value).find()) {
@@ -194,8 +351,20 @@ public class CodeParser {
 				for(int i = 0; i < values.length; i++) {
 					String val = values[i];
 					if(val.matches("^([0-9]+)$")) continue;
-					else if(val.matches("^([a-zA-Z_0-9])+$")) {
+					else if(val.matches("^([a-zA-Z_0-9]+)$")) {
 						newValues[i] = String.valueOf(getVar(val));
+					}
+					else if(val.matches("^([a-zA-Z_0-9]+)(\\[([0-9]+)\\]){1}$")) {
+						Matcher matcher = arrayPattern.matcher(val);
+						matcher.matches();
+						String varName = matcher.group(1);
+						int num = Integer.parseInt(matcher.group(3));
+						if(num < 0) {
+							ParserError.outOfBounds(this, varName);
+							return 0;
+						}
+						TreeMap array = (TreeMap) getVar(varName);
+						newValues[i] = String.valueOf(array.get(num));
 					}
 					else continue;
 				}
@@ -225,7 +394,7 @@ public class CodeParser {
 		try {
 			value = replaceSpaces(value);
 			value = replaceActions(value);
-			if(Pattern.compile("^([0-9.]+)$").matcher(value).find()) {
+			if(floatPattern.matcher(value).find()) {
 				return Float.parseFloat(value);
 			}
 			else if(Pattern.compile("\\(").matcher(value).find()) {
@@ -269,6 +438,18 @@ public class CodeParser {
 					else if(val.matches("^([a-zA-Z_0-9])+$")) {
 						newValues[i] = String.valueOf(getVar(val));
 					}
+					else if(val.matches("^([a-zA-Z_0-9]+)(\\[([0-9]+)\\]){1}$")) {
+						Matcher matcher = arrayPattern.matcher(val);
+						matcher.matches();
+						String varName = matcher.group(1);
+						int num = Integer.parseInt(matcher.group(3));
+						if(num < 0) {
+							ParserError.outOfBounds(this, varName);
+							return 0;
+						}
+						TreeMap array = (TreeMap) getVar(varName);
+						newValues[i] = String.valueOf(array.get(num));
+					}
 					else continue;
 				}
 				String[] symbols = value.split("([a-zA-Z_0-9.]+)");
@@ -299,12 +480,64 @@ public class CodeParser {
 			Matcher matcher = stringPattern.matcher(value);
 			if(matcher.find()) {
 				value = matcher.group(1);
-				Map<String, Object> allVars = getAllVars(true);
-				for(Entry<String, Object> var : allVars.entrySet()) {
-					value = value.replaceAll("%" + var.getKey() + "%", String.valueOf(var.getValue()));
+				String newValue = "", varName = "";
+				boolean var = false;
+				char lastChar = ' ';
+				for(char c : value.toCharArray()) {
+					if(c == '%' && lastChar != '\\') {
+						if(var) {
+							var = false;
+							if(varName.matches("^([a-zA-Z_0-9]+)(\\[([0-9]+)\\]){1}$")) {
+								matcher = arrayPattern.matcher(varName);
+								matcher.matches();
+								String varName2 = matcher.group(1);
+								int num = Integer.parseInt(matcher.group(3));
+								if(num < 0) {
+									ParserError.outOfBounds(this, varName2);
+									return "";
+								}
+								TreeMap array = (TreeMap) getVar(varName2);
+								newValue += String.valueOf(array.get(num));
+								varName = "";
+							}
+							else {
+								newValue += getVar(varName);
+								varName = "";
+							}
+						}
+						else {
+							var = true;
+							varName = "";
+						}
+					}
+					else if(var) varName += c;
+					else newValue += c;
+					
+					lastChar = c;
 				}
-				value = value.replaceAll("\\\\\\\"", "\"");
-				return value;
+				if(!varName.equals("")) newValue += "%" + varName;
+				
+				return newValue;
+			}
+			else if(value.matches("^([a-zA-Z_0-9]+)(\\[([0-9]+)\\])?$")) {
+				if(value.matches("^([a-zA-Z_0-9]+)(\\[([0-9]+)\\]){1}$")) {
+					matcher = arrayPattern.matcher(value);
+					matcher.matches();
+					String varName2 = matcher.group(1);
+					int num = Integer.parseInt(matcher.group(3));
+					if(num < 0) {
+						ParserError.outOfBounds(this, varName2);
+						return "";
+					}
+					TreeMap array = (TreeMap) getVar(varName2);
+					return String.valueOf(array.get(num));
+				}
+				else {
+					return String.valueOf(getVar(value));
+				}
+			}
+			else if(value.matches("^([a-zA-Z_0-9]+)(\\((.+)\\))$")) {
+				return String.valueOf(runAction(value, true));
 			}
 			ParserError.cantParse(instance, value);
 			return "";
@@ -398,6 +631,19 @@ public class CodeParser {
 					return getFloat(values[0])<getFloat(values[1]);
 				}
 				else if(hasVar(value)) return (Boolean) getVar(value);
+				else if(value.matches("^([a-zA-Z_0-9]+)(\\[([0-9]+)\\]){1}$")) {
+					Matcher matcher = arrayPattern.matcher(value);
+					matcher.matches();
+					String varName = matcher.group(1);
+					int num = Integer.parseInt(matcher.group(3));
+					if(num < 0) {
+						ParserError.outOfBounds(this, varName);
+						return false;
+					}
+					TreeMap array = (TreeMap) getVar(varName);
+					return (boolean) array.get(num);
+				}
+				
 				ParserError.cantParse(instance, value);
 				return false;
 			}
@@ -453,8 +699,10 @@ public class CodeParser {
 			for(int i = 0; i < values.size(); i++) {
 				values2[i] = values.get(i);
 			}
+			MacroModCore.activeActions.add(action);
 			Object returnValue = action.execute(this, value, values2, matcher.group(4));
 			if(executeCode) lastAction = action;
+			MacroModCore.activeActions.remove(action);
 			return returnValue;
 		}
 		ParserError.methodDoesntExist(instance, matcher.group(1));
@@ -462,7 +710,6 @@ public class CodeParser {
 	}
 	
 	public Object getVar(String key) {
-		key = key.toLowerCase();
 		if(vars.containsKey(key)) return vars.get(key);
 		else if(globalVars.containsKey(key)) return globalVars.get(key);
 		else if(parentParser != null) return parentParser.getVar(key);
@@ -491,6 +738,11 @@ public class CodeParser {
 		else if(globalVars.containsKey(key)) globalVars.put(key, value);
 		else if(parentParser != null && parentParser.hasVar(key)) parentParser.setVar(key, value);
 		else ParserError.varDoesntExist(instance, key);
+	}
+	
+	public void addVar(String key, Object value, boolean global) {
+		if(global) globalVars.put(key, value);
+		else vars.put(key, value);
 	}
 	
 	public String replaceSpaces(String value) {
@@ -606,17 +858,35 @@ public class CodeParser {
 		char lastSymbol = ' ';
 		char p = '\u00A7';
 		boolean inText = false;
+		boolean inTextVar = false;
 		for(char c : code.toCharArray()) {
-			if((" +-=/*{}(),;\"".indexOf(c) != -1 || c == 10)) {
+			if((" +-=/*{}(),;\"%".indexOf(c) != -1 || c == 10)) {
 				if(c == '"' && lastSymbol != '\\' && inText) {
 					coloredCode += word + "\"" + p + "f";
 					word = "";
 					inText = false;
+					inTextVar = false;
 					continue;
 				}
+				else if(c == '%' && lastSymbol != '\\' && inText) {
+					if(inTextVar) {
+						inTextVar = false;
+						coloredCode += p+"6" + word + p+"7%";
+						word = "";
+					}
+					else {
+						inTextVar = true;
+						coloredCode += p+"7" + word+"%";
+						word = "";
+					}
+				}
 				else if(!inText) {
-					if(word.equals("int") || word.equals("float") || word.equals("string") || word.equals("bool")) {
+					if(word.matches("^((int)|(float)|(string)|(bool))(\\[\\])?$")) {
 						coloredCode += p+"9" + word;
+						word = "";
+					}
+					else if(word.equals("global")) {
+						coloredCode += p+"5" + word;
 						word = "";
 					}
 					else if(c == '(' && actions.get(word) != null) {
@@ -650,6 +920,11 @@ public class CodeParser {
 			}
 			else word += c;
 			
+			if(coloredCode.equals("") && word.equals("$$")) {
+				coloredCode += p + "5" + word;
+				word = "";
+			}
+			
 			lastSymbol = c;
 		}
 		
@@ -657,5 +932,9 @@ public class CodeParser {
 			coloredCode += word;
 		}
 		return coloredCode;
+	}
+	
+	public static ActionBase getAction(String name) {
+		return actions.get(name);
 	}
 }

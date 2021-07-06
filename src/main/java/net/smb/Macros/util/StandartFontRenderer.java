@@ -244,13 +244,13 @@ public class StandartFontRenderer implements IResourceManagerReloadListener
         float var6 = (float)this.charWidth[p_78266_1_] - 0.01F;
         GL11.glBegin(GL11.GL_TRIANGLE_STRIP);
         GL11.glTexCoord2f(var3 / 128.0F, var4 / 128.0F);
-        GL11.glVertex3f(this.posX + var5, this.posY, 0.0F);
+        GL11.glVertex3f(this.posX + var5, this.posY, RenderUtil.zLevel);
         GL11.glTexCoord2f(var3 / 128.0F, (var4 + 7.99F) / 128.0F);
-        GL11.glVertex3f(this.posX - var5, this.posY + 7.99F, 0.0F);
+        GL11.glVertex3f(this.posX - var5, this.posY + 7.99F, RenderUtil.zLevel);
         GL11.glTexCoord2f((var3 + var6 - 1.0F) / 128.0F, var4 / 128.0F);
-        GL11.glVertex3f(this.posX + var6 - 1.0F + var5, this.posY, 0.0F);
+        GL11.glVertex3f(this.posX + var6 - 1.0F + var5, this.posY, RenderUtil.zLevel);
         GL11.glTexCoord2f((var3 + var6 - 1.0F) / 128.0F, (var4 + 7.99F) / 128.0F);
-        GL11.glVertex3f(this.posX + var6 - 1.0F - var5, this.posY + 7.99F, 0.0F);
+        GL11.glVertex3f(this.posX + var6 - 1.0F - var5, this.posY + 7.99F, RenderUtil.zLevel);
         GL11.glEnd();
         return (float)this.charWidth[p_78266_1_];
     }
@@ -297,13 +297,13 @@ public class StandartFontRenderer implements IResourceManagerReloadListener
             float var11 = p_78277_2_ ? 1.0F : 0.0F;
             GL11.glBegin(GL11.GL_TRIANGLE_STRIP);
             GL11.glTexCoord2f(var8 / 256.0F, var9 / 256.0F);
-            GL11.glVertex3f(this.posX + var11, this.posY, 0.0F);
+            GL11.glVertex3f(this.posX + var11, this.posY, RenderUtil.zLevel);
             GL11.glTexCoord2f(var8 / 256.0F, (var9 + 15.98F) / 256.0F);
-            GL11.glVertex3f(this.posX - var11, this.posY + 7.99F, 0.0F);
+            GL11.glVertex3f(this.posX - var11, this.posY + 7.99F, RenderUtil.zLevel);
             GL11.glTexCoord2f((var8 + var10) / 256.0F, var9 / 256.0F);
-            GL11.glVertex3f(this.posX + var10 / 2.0F + var11, this.posY, 0.0F);
+            GL11.glVertex3f(this.posX + var10 / 2.0F + var11, this.posY, RenderUtil.zLevel);
             GL11.glTexCoord2f((var8 + var10) / 256.0F, (var9 + 15.98F) / 256.0F);
-            GL11.glVertex3f(this.posX + var10 / 2.0F - var11, this.posY + 7.99F, 0.0F);
+            GL11.glVertex3f(this.posX + var10 / 2.0F - var11, this.posY + 7.99F, RenderUtil.zLevel);
             GL11.glEnd();
             return (var7 - var6) / 2.0F + 1.0F;
         }

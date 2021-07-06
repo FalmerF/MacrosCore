@@ -3,11 +3,11 @@ package net.smb.Macros.gui.elements;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
-import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.util.ResourceLocation;
 import net.smb.Macros.gui.screens.GuiScreenHeader;
 
-public class GuiElement extends Gui {
+public class GuiElement extends GuiButton {
 	public int id;
     public int posX, relPosX;
     public int posY, relPosY;
@@ -20,6 +20,7 @@ public class GuiElement extends Gui {
     public boolean selected;
     
     protected GuiElement(int id, int posX, int posY, int width, int height){
+    	super(-1, 0, 0, "");
     	this.id = id;
     	this.posX = posX;
     	this.posY = posY;
@@ -48,6 +49,11 @@ public class GuiElement extends Gui {
     }
     
     public void draw(Minecraft mc, int positionX, int positionY) {}
+    
+    public void drawButton(Minecraft mc, int positionX, int positionY)
+    {
+    	draw(mc, positionX, positionY);
+    }
     
     protected void dragged(Minecraft mc, int posX, int posY) {}
     
@@ -83,6 +89,10 @@ public class GuiElement extends Gui {
     	this.selected = selected;
     }
     
+    public void setSelected(boolean selected, int posX, int posY) {
+    	setSelected(selected);
+    }
+    
     public void keyTyped(char key, int keyId) {}
     
     public void playPressSound(SoundHandler handler)
@@ -91,4 +101,14 @@ public class GuiElement extends Gui {
     }
     
     public void update() {}
+    
+    public void setPos(int x, int y) {
+    	this.posX = x;
+    	this.posY = y;
+    }
+    
+    public void setRelPos(int x, int y) {
+    	this.relPosX = x;
+    	this.relPosY = y;
+    }
 }

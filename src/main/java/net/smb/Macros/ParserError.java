@@ -45,6 +45,16 @@ public class ParserError {
 		parser.setError();
 	}
 	
+	public static void notArray(CodeParser parser, String var) {
+		logMessage(parser.parserName + ": " + var + " " + Localisation.getString("parser.error.notarray"));
+		parser.setError();
+	}
+	
+	public static void outOfBounds(CodeParser parser, String array) {
+		logMessage(parser.parserName + ": " + Localisation.getString("parser.error.outofbounds") + " " + array);
+		parser.setError();
+	}
+	
 	public static void logMessage(String message) {
 		GuiNewChat chat = Minecraft.getMinecraft().ingameGUI.getChatGUI();
 		chat.printChatMessage(new ChatComponentText(Localisation.getString("paragraph") + "c" + message));
